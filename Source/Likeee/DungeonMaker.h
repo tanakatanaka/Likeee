@@ -15,8 +15,6 @@ public:
 	// Sets default values for this actor's properties
 	ADungeonMaker();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 	UFUNCTION(BlueprintCallable)
 	void CreateObject(int32 vertical, int32 horizontal);
 
