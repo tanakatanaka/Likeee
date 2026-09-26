@@ -21,6 +21,9 @@ public:
 	void SpawnAreaBP(int32 horizontal, int32 vertical);
 	virtual void SpawnAreaBP_Implementation(int32 horizontal, int32 vertical);
 
+	UFUNCTION(BlueprintCallable)
+	bool IsMovable(int32 horizontal, int32 vertical);
+
 protected:	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,7 +38,4 @@ protected:
 
 private:
 	FDungeonGenerator* dungeonGenerator;
-
-
-
 };

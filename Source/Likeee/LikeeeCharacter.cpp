@@ -78,7 +78,10 @@ void ALikeeeCharacter::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	// route the input
-	DoMove(MovementVector.X, MovementVector.Y);
+	if (StoredFunction.IsBound() && StoredFunction.Execute(0, 0))
+	{
+		DoMove(MovementVector.X, MovementVector.Y);
+	}
 }
 
 void ALikeeeCharacter::Look(const FInputActionValue& Value)
@@ -148,4 +151,9 @@ void ALikeeeCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void ALikeeeCharacter::SetFunction(FMyFunction Function)
+{
+	StoredFunction = Function;
 }

@@ -13,6 +13,7 @@ class UInputAction;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FMyFunction, int32, A, int32, B);
 
 /**
  *  A simple player-controllable third person character
@@ -50,9 +51,11 @@ protected:
 	UInputAction* MouseLookAction;
 
 public:
-
 	/** Constructor */
 	ALikeeeCharacter();	
+
+	UFUNCTION(BlueprintCallable)
+	void SetFunction(FMyFunction Function);
 
 protected:
 
@@ -92,5 +95,9 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+private:
+	UPROPERTY()
+	FMyFunction StoredFunction;
 };
 

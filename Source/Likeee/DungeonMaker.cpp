@@ -44,3 +44,9 @@ void ADungeonMaker::SpawnAreaBP_Implementation(int32 horizontal, int32 vertical)
 {
 
 }
+
+
+bool ADungeonMaker::IsMovable(int32 horizontal, int32 vertical)
+{
+    return dungeonGenerator->GetTile(horizontal, vertical) == EDungeonTile::Wall;
+}
