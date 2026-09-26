@@ -8,13 +8,14 @@ ADungeonMaker::ADungeonMaker()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void ADungeonMaker::BeginPlay()
 {
 	Super::BeginPlay();
+    dungeonGenerator = new FDungeonGenerator();
+    dungeonGenerator->Generate(MapHorizontal, MapVertical, 10);
 }
 
 void ADungeonMaker::MakeField()
@@ -25,20 +26,14 @@ void ADungeonMaker::MakeField()
         {
             AsyncTask(ENamedThreads::GameThread, [row, column, this]()
             {
-                if(Map[row][column] == 0)
-                    this->SpawnAreaBP(row, column);
+                if(dungeonGenerator->GetTile(column, row) == EDungeonTile::Wall)
+                    this->SpawnAreaBP(column, row);
             });
         }
     }
 }
 
-void ADungeonMaker::CreateObject(int32 vertical, int32 horizontal)
-{
-    FVector Location(vertical * 100, horizontal * 100, 0.0f);
-    FRotator Rotation = FRotator::ZeroRotator;
-}
-
-void ADungeonMaker::SpawnAreaBP_Implementation(int32 vertical, int32 horizontal)
+void ADungeonMaker::SpawnAreaBP_Implementation(int32 horizontal, int32 vertical)
 {
 
 }

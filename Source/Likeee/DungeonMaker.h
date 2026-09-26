@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "MapMaker/FDungeonGenerator.h"
 #include "DungeonMaker.generated.h"
 
 UCLASS()
@@ -15,13 +16,10 @@ public:
 	// Sets default values for this actor's properties
 	ADungeonMaker();
 
-	UFUNCTION(BlueprintCallable)
-	void CreateObject(int32 vertical, int32 horizontal);
-
 	//call BP Func
 	UFUNCTION(BlueprintNativeEvent, Category = "MyCategory")
-	void SpawnAreaBP(int32 vertical, int32 horizontal);
-	virtual void SpawnAreaBP_Implementation(int32 vertical, int32 horizontal);
+	void SpawnAreaBP(int32 horizontal, int32 vertical);
+	virtual void SpawnAreaBP_Implementation(int32 horizontal, int32 vertical);
 
 protected:	
 	// Called when the game starts or when spawned
@@ -37,4 +35,5 @@ protected:
 
 private:
 	int32 Map[MapVertical][MapHorizontal];
+	FDungeonGenerator* dungeonGenerator;
 };
