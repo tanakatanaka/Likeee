@@ -13,7 +13,7 @@ class UInputAction;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
-DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FMyFunction, int32, A, int32, B);
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FIsMoveAbleFunction, int32, A, int32, B);
 
 /**
  *  A simple player-controllable third person character
@@ -55,7 +55,7 @@ public:
 	ALikeeeCharacter();	
 
 	UFUNCTION(BlueprintCallable)
-	void SetFunction(FMyFunction Function);
+	void SetMoveAbleFunction(FIsMoveAbleFunction Function);
 
 protected:
 
@@ -98,6 +98,6 @@ public:
 
 private:
 	UPROPERTY()
-	FMyFunction StoredFunction;
+	FIsMoveAbleFunction moveAbleFunction;
 };
 
