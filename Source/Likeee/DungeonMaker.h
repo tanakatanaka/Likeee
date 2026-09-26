@@ -34,6 +34,8 @@ protected:
 
 
 private:
-	int32 Map[MapVertical][MapHorizontal];
 	FDungeonGenerator* dungeonGenerator;
+
+
+
 };

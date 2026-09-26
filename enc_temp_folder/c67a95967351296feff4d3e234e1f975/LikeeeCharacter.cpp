@@ -100,31 +100,13 @@ void ALikeeeCharacter::DoMove(float Right, float Forward)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		const float MoveDistance = 5.0f;
-		FVector MoveDirection = FVector::ZeroVector;
 
-		// ª«
-		if (Forward != 0.0f)
-		{
-			MoveDirection += ForwardDirection * Forward;
-		}
-
-		// ©¨
-		if (Right != 0.0f)
-		{
-			MoveDirection += RightDirection * Right;
-		}
-
-		if (!MoveDirection.IsNearlyZero())
-		{
-			MoveDirection.Normalize();
-			// ˆÚ“®‚·‚é•ûŒü‚ğŒü‚­
-			const FRotator NewRotation = MoveDirection.Rotation();
-			SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
-			// Œü‚¢‚½•ûŒü‚Ö10mˆÚ“®
-			AddActorWorldOffset(MoveDirection * MoveDistance, true);
-		}
+		// add movement 
+		AddMovementInput(ForwardDirection, Forward * 1000);
+		AddMovementInput(RightDirection, Right);
 	}
 }
 
