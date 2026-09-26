@@ -61,10 +61,10 @@ void ALikeeeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ALikeeeCharacter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ALikeeeCharacter::Look);
+		//EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ALikeeeCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ALikeeeCharacter::Look);
+		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ALikeeeCharacter::Look);
 	}
 	else
 	{

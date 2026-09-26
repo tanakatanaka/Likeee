@@ -15,11 +15,18 @@ void ADungeonMaker::BeginPlay()
 {
 	Super::BeginPlay();
     dungeonGenerator = new FDungeonGenerator();
-    dungeonGenerator->Generate(MapHorizontal, MapVertical, 10);
+    
 }
 
 void ADungeonMaker::MakeField()
 {
+    if (dungeonGenerator == nullptr)
+    {
+        dungeonGenerator = new FDungeonGenerator();
+    }
+    
+    dungeonGenerator->Generate(MapHorizontal, MapVertical, FMath::RandRange(1, 100));
+
     for (int32 row = 0; row < MapVertical; ++row)
     {
         for (int32 column = 0; column < MapHorizontal; ++column)
