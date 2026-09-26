@@ -27,11 +27,7 @@ FDungeonGenerator::~FDungeonGenerator()
 // Generate
 // ============================================================
 
-void FDungeonGenerator::Generate(
-	int32 InWidth,
-	int32 InHeight,
-	int32 Seed
-)
+void FDungeonGenerator::Generate(int32 InWidth, int32 InHeight, int32 Seed)
 {
 	Width = InWidth;
 	Height = InHeight;
@@ -42,29 +38,25 @@ void FDungeonGenerator::Generate(
 	Rooms.Empty();
 	Connections.Empty();
 
-	// ① 全部壁にする
+	// ① マップをすべて壁にする
 	InitializeMap();
 
 	// ② 区画を作る
 	CreateBlocks();
 
-	// ③ 部屋を作る
+	// ③ 区画の中に部屋を作る
 	CreateRooms();
 
-	// ④ 接続関係を作る
+	// ④ 部屋同士の接続関係を決める
 	DecideConnections();
 
-	// ⑤ 通路を作る
+	// ⑤ 通路を掘る
 	CreateCorridors();
 
-	// ⑥ 接続確認
+	// ⑥ すべての床が接続されているか確認
 	if (!CheckConnectivity())
 	{
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("Dungeon is not connected!")
-		);
+		UE_LOG(LogTemp, Warning, TEXT("Dungeon is not connected!"));
 	}
 
 	UE_LOG(
@@ -85,10 +77,7 @@ void FDungeonGenerator::Generate(
 
 void FDungeonGenerator::InitializeMap()
 {
-	Tiles.Init(
-		EDungeonTile::Wall,
-		Width * Height
-	);
+	Tiles.Init(EDungeonTile::Wall, Width * Height);
 }
 
 
@@ -104,9 +93,9 @@ void FDungeonGenerator::CreateBlocks()
 	constexpr int32 MinBlockHeight = 8;
 
 
-	// ----------------------------------------
-	// 最初はマップ全体が1区画
-	// ----------------------------------------
+	// --------------------------------------------------------
+	// 最初はマップ全体を1つの区画として扱う
+	// --------------------------------------------------------
 
 	FDungeonBlock Root;
 
@@ -119,43 +108,28 @@ void FDungeonGenerator::CreateBlocks()
 	Blocks.Add(Root);
 
 
-	// ----------------------------------------
-	// 分割
-	// ----------------------------------------
+	// --------------------------------------------------------
+	// 区画を分割していく
+	// --------------------------------------------------------
 
 	int32 Attempts = 0;
 
-	while (
-		Blocks.Num() < TargetBlockCount &&
-		Attempts < 200
-		)
+	while (Blocks.Num() < TargetBlockCount && Attempts < 200)
 	{
 		++Attempts;
 
+		// 分割する区画をランダムに選ぶ
+		const int32 Index = Random.RandRange(0, Blocks.Num() - 1);
 
-		const int32 Index =
-			Random.RandRange(
-				0,
-				Blocks.Num() - 1
-			);
+		const FDungeonBlock Block = Blocks[Index];
 
 
-		const FDungeonBlock Block =
-			Blocks[Index];
+		// ----------------------------------------------------
+		// 縦・横に分割可能か確認
+		// ----------------------------------------------------
 
-
-		// ========================================
-		// 分割可能か
-		// ========================================
-
-		const bool bCanVertical =
-			Block.Width >=
-			MinBlockWidth * 2;
-
-		const bool bCanHorizontal =
-			Block.Height >=
-			MinBlockHeight * 2;
-
+		const bool bCanVertical = Block.Width >= MinBlockWidth * 2;
+		const bool bCanHorizontal = Block.Height >= MinBlockHeight * 2;
 
 		if (!bCanVertical && !bCanHorizontal)
 		{
@@ -163,38 +137,30 @@ void FDungeonGenerator::CreateBlocks()
 		}
 
 
-		// ========================================
-		// 分割方向
-		// ========================================
+		// ----------------------------------------------------
+		// 分割方向を決定
+		// ----------------------------------------------------
 
 		bool bVertical = false;
 
-
 		if (bCanVertical && bCanHorizontal)
 		{
-			// 横長
-			if (
-				Block.Width >
-				Block.Height * 1.5f
-				)
+			// 横長なら縦方向に分割
+			if (Block.Width > Block.Height * 1.5f)
 			{
 				bVertical = true;
 			}
 
-			// 縦長
-			else if (
-				Block.Height >
-				Block.Width * 1.5f
-				)
+			// 縦長なら横方向に分割
+			else if (Block.Height > Block.Width * 1.5f)
 			{
 				bVertical = false;
 			}
 
-			// 正方形に近い
+			// 正方形に近いならランダム
 			else
 			{
-				bVertical =
-					Random.RandRange(0, 1) == 0;
+				bVertical = Random.RandRange(0, 1) == 0;
 			}
 		}
 		else
@@ -207,18 +173,16 @@ void FDungeonGenerator::CreateBlocks()
 		Blocks.RemoveAt(Index);
 
 
-		// ========================================
-		// 縦に切る
-		// ========================================
+		// ====================================================
+		// 縦方向に分割
+		// ====================================================
 
 		if (bVertical)
 		{
-			const int32 Split =
-				Random.RandRange(
-					MinBlockWidth,
-					Block.Width -
-					MinBlockWidth
-				);
+			const int32 Split = Random.RandRange(
+				MinBlockWidth,
+				Block.Width - MinBlockWidth
+			);
 
 
 			FDungeonBlock A;
@@ -232,34 +196,28 @@ void FDungeonGenerator::CreateBlocks()
 
 			FDungeonBlock B;
 
-			B.X =
-				Block.X + Split;
-
+			B.X = Block.X + Split;
 			B.Y = Block.Y;
 
-			B.Width =
-				Block.Width - Split;
-
-			B.Height =
-				Block.Height;
+			B.Width = Block.Width - Split;
+			B.Height = Block.Height;
 
 
 			Blocks.Add(A);
 			Blocks.Add(B);
 		}
 
-		// ========================================
-		// 横に切る
-		// ========================================
+
+		// ====================================================
+		// 横方向に分割
+		// ====================================================
 
 		else
 		{
-			const int32 Split =
-				Random.RandRange(
-					MinBlockHeight,
-					Block.Height -
-					MinBlockHeight
-				);
+			const int32 Split = Random.RandRange(
+				MinBlockHeight,
+				Block.Height - MinBlockHeight
+			);
 
 
 			FDungeonBlock A;
@@ -267,26 +225,17 @@ void FDungeonGenerator::CreateBlocks()
 			A.X = Block.X;
 			A.Y = Block.Y;
 
-			A.Width =
-				Block.Width;
-
-			A.Height =
-				Split;
+			A.Width = Block.Width;
+			A.Height = Split;
 
 
 			FDungeonBlock B;
 
-			B.X =
-				Block.X;
+			B.X = Block.X;
+			B.Y = Block.Y + Split;
 
-			B.Y =
-				Block.Y + Split;
-
-			B.Width =
-				Block.Width;
-
-			B.Height =
-				Block.Height - Split;
+			B.Width = Block.Width;
+			B.Height = Block.Height - Split;
 
 
 			Blocks.Add(A);
@@ -310,81 +259,50 @@ void FDungeonGenerator::CreateRooms()
 
 	for (FDungeonBlock& Block : Blocks)
 	{
-		const int32 MaxRoomWidth =
-			Block.Width -
-			Margin * 2;
+		// ----------------------------------------------------
+		// この区画に作れる最大の部屋サイズ
+		// ----------------------------------------------------
 
-		const int32 MaxRoomHeight =
-			Block.Height -
-			Margin * 2;
+		const int32 MaxRoomWidth = Block.Width - Margin * 2;
+		const int32 MaxRoomHeight = Block.Height - Margin * 2;
 
 
-		if (
-			MaxRoomWidth < MinRoomWidth ||
-			MaxRoomHeight < MinRoomHeight
-			)
+		if (MaxRoomWidth < MinRoomWidth || MaxRoomHeight < MinRoomHeight)
 		{
 			continue;
 		}
 
 
-		// ========================================
-		// 部屋サイズ
-		// ========================================
+		// ----------------------------------------------------
+		// 部屋サイズをランダム決定
+		// ----------------------------------------------------
 
-		const int32 RoomWidth =
-			Random.RandRange(
-				MinRoomWidth,
-				MaxRoomWidth
-			);
-
-		const int32 RoomHeight =
-			Random.RandRange(
-				MinRoomHeight,
-				MaxRoomHeight
-			);
+		const int32 RoomWidth = Random.RandRange(MinRoomWidth, MaxRoomWidth);
+		const int32 RoomHeight = Random.RandRange(MinRoomHeight, MaxRoomHeight);
 
 
-		// ========================================
-		// 部屋位置
-		// ========================================
+		// ----------------------------------------------------
+		// 部屋を置ける範囲
+		// ----------------------------------------------------
 
-		const int32 MinX =
-			Block.X + Margin;
+		const int32 MinX = Block.X + Margin;
+		const int32 MaxX = Block.X + Block.Width - RoomWidth - Margin;
 
-		const int32 MaxX =
-			Block.X +
-			Block.Width -
-			RoomWidth -
-			Margin;
+		const int32 MinY = Block.Y + Margin;
+		const int32 MaxY = Block.Y + Block.Height - RoomHeight - Margin;
 
 
-		const int32 MinY =
-			Block.Y + Margin;
+		// ----------------------------------------------------
+		// 部屋位置をランダム決定
+		// ----------------------------------------------------
 
-		const int32 MaxY =
-			Block.Y +
-			Block.Height -
-			RoomHeight -
-			Margin;
+		const int32 RoomX = Random.RandRange(MinX, MaxX);
+		const int32 RoomY = Random.RandRange(MinY, MaxY);
 
 
-		const int32 RoomX =
-			Random.RandRange(
-				MinX,
-				MaxX
-			);
-
-		const int32 RoomY =
-			Random.RandRange(
-				MinY,
-				MaxY
-			);
-
-
-		// ========================================
-		// Room
-		// ========================================
+		// ----------------------------------------------------
+		// Room作成
+		// ----------------------------------------------------
 
 		FDungeonRoom Room;
 
@@ -395,32 +313,22 @@ void FDungeonGenerator::CreateRooms()
 		Room.Height = RoomHeight;
 
 
+		// 区画に部屋を登録
 		Block.Room = Room;
 
+		// 部屋一覧にも登録
 		Rooms.Add(Room);
 
 
-		// ========================================
-		// 床にする
-		// ========================================
+		// ----------------------------------------------------
+		// 部屋部分をFloorに変更
+		// ----------------------------------------------------
 
-		for (
-			int32 Y = Room.Y;
-			Y < Room.Y + Room.Height;
-			++Y
-			)
+		for (int32 Y = Room.Y; Y < Room.Y + Room.Height; ++Y)
 		{
-			for (
-				int32 X = Room.X;
-				X < Room.X + Room.Width;
-				++X
-				)
+			for (int32 X = Room.X; X < Room.X + Room.Width; ++X)
 			{
-				SetTile(
-					X,
-					Y,
-					EDungeonTile::Floor
-				);
+				SetTile(X, Y, EDungeonTile::Floor);
 			}
 		}
 	}
@@ -428,7 +336,7 @@ void FDungeonGenerator::CreateRooms()
 
 
 // ============================================================
-// 部屋の接続
+// 部屋同士の接続関係を決定
 // ============================================================
 
 void FDungeonGenerator::DecideConnections()
@@ -442,17 +350,15 @@ void FDungeonGenerator::DecideConnections()
 	}
 
 
-	// 現段階では
+	// 現段階では単純に
 	//
-	// 0 -- 1 -- 2 -- 3 -- 4
+	// 0 ── 1 ── 2 ── 3 ── 4
 	//
-	// のように接続
+	// のように全部つなぐ。
+	//
+	// 後でシレン風の接続グラフに変更可能。
 
-	for (
-		int32 i = 0;
-		i < Blocks.Num() - 1;
-		++i
-		)
+	for (int32 i = 0; i < Blocks.Num() - 1; ++i)
 	{
 		FDungeonConnection Connection;
 
@@ -470,79 +376,44 @@ void FDungeonGenerator::DecideConnections()
 
 void FDungeonGenerator::CreateCorridors()
 {
-	for (
-		const FDungeonConnection& Connection :
-		Connections
-		)
+	for (const FDungeonConnection& Connection : Connections)
 	{
-		const FDungeonRoom& RoomA =
-			Blocks[Connection.A].Room;
-
-		const FDungeonRoom& RoomB =
-			Blocks[Connection.B].Room;
+		const FDungeonRoom& RoomA = Blocks[Connection.A].Room;
+		const FDungeonRoom& RoomB = Blocks[Connection.B].Room;
 
 
-		const int32 X1 =
-			RoomA.CenterX();
+		const int32 X1 = RoomA.CenterX();
+		const int32 Y1 = RoomA.CenterY();
 
-		const int32 Y1 =
-			RoomA.CenterY();
-
-
-		const int32 X2 =
-			RoomB.CenterX();
-
-		const int32 Y2 =
-			RoomB.CenterY();
+		const int32 X2 = RoomB.CenterX();
+		const int32 Y2 = RoomB.CenterY();
 
 
-		// ========================================
-		// L字通路
-		// ========================================
+		// ----------------------------------------------------
+		// L字型の通路を作る
+		// ----------------------------------------------------
 
-		if (
-			Random.RandRange(0, 1) == 0
-			)
+		if (Random.RandRange(0, 1) == 0)
 		{
-			DigHorizontal(
-				X1,
-				X2,
-				Y1
-			);
-
-			DigVertical(
-				Y1,
-				Y2,
-				X2
-			);
+			// 横 → 縦
+			DigHorizontal(X1, X2, Y1);
+			DigVertical(Y1, Y2, X2);
 		}
 		else
 		{
-			DigVertical(
-				Y1,
-				Y2,
-				X1
-			);
-
-			DigHorizontal(
-				X1,
-				X2,
-				Y2
-			);
+			// 縦 → 横
+			DigVertical(Y1, Y2, X1);
+			DigHorizontal(X1, X2, Y2);
 		}
 	}
 }
 
 
 // ============================================================
-// 横通路
+// 横方向に通路を掘る
 // ============================================================
 
-void FDungeonGenerator::DigHorizontal(
-	int32 X1,
-	int32 X2,
-	int32 Y
-)
+void FDungeonGenerator::DigHorizontal(int32 X1, int32 X2, int32 Y)
 {
 	if (X1 > X2)
 	{
@@ -550,30 +421,18 @@ void FDungeonGenerator::DigHorizontal(
 	}
 
 
-	for (
-		int32 X = X1;
-		X <= X2;
-		++X
-		)
+	for (int32 X = X1; X <= X2; ++X)
 	{
-		SetTile(
-			X,
-			Y,
-			EDungeonTile::Floor
-		);
+		SetTile(X, Y, EDungeonTile::Floor);
 	}
 }
 
 
 // ============================================================
-// 縦通路
+// 縦方向に通路を掘る
 // ============================================================
 
-void FDungeonGenerator::DigVertical(
-	int32 Y1,
-	int32 Y2,
-	int32 X
-)
+void FDungeonGenerator::DigVertical(int32 Y1, int32 Y2, int32 X)
 {
 	if (Y1 > Y2)
 	{
@@ -581,23 +440,15 @@ void FDungeonGenerator::DigVertical(
 	}
 
 
-	for (
-		int32 Y = Y1;
-		Y <= Y2;
-		++Y
-		)
+	for (int32 Y = Y1; Y <= Y2; ++Y)
 	{
-		SetTile(
-			X,
-			Y,
-			EDungeonTile::Floor
-		);
+		SetTile(X, Y, EDungeonTile::Floor);
 	}
 }
 
 
 // ============================================================
-// BFS 接続チェック
+// BFSで全床がつながっているか確認
 // ============================================================
 
 bool FDungeonGenerator::CheckConnectivity() const
@@ -608,83 +459,81 @@ bool FDungeonGenerator::CheckConnectivity() const
 	int32 TotalFloor = 0;
 
 
-	// ========================================
-	// 床を探す
-	// ========================================
+	// --------------------------------------------------------
+	// 最初の床を探す
+	// --------------------------------------------------------
 
 	for (int32 Y = 0; Y < Height; ++Y)
 	{
 		for (int32 X = 0; X < Width; ++X)
 		{
-			if (
-				GetTile(X, Y) ==
-				EDungeonTile::Floor
-				)
+			if (GetTile(X, Y) != EDungeonTile::Floor)
 			{
-				++TotalFloor;
+				continue;
+			}
+
+			++TotalFloor;
 
 
-				if (StartX == -1)
-				{
-					StartX = X;
-					StartY = Y;
-				}
+			if (StartX == -1)
+			{
+				StartX = X;
+				StartY = Y;
 			}
 		}
 	}
 
 
+	// 床が1つもない
 	if (StartX == -1)
 	{
 		return false;
 	}
 
 
-	// ========================================
-	// 訪問済み
-	// ========================================
+	// --------------------------------------------------------
+	// 訪問済み配列
+	// --------------------------------------------------------
 
 	TArray<bool> Visited;
 
-	Visited.Init(
-		false,
-		Width * Height
-	);
+	Visited.Init(false, Width * Height);
 
+
+	// --------------------------------------------------------
+	// BFS開始
+	// --------------------------------------------------------
 
 	TQueue<FIntPoint> Queue;
 
+	Queue.Enqueue(FIntPoint(StartX, StartY));
 
-	Queue.Enqueue(
-		FIntPoint(
-			StartX,
-			StartY
-		)
-	);
-
-
-	Visited[
-		StartY * Width + StartX
-	] = true;
+	Visited[StartY * Width + StartX] = true;
 
 
 	static constexpr int32 DX[4] =
 	{
-		1, -1, 0, 0
+		1,
+		-1,
+		0,
+		0
 	};
 
 	static constexpr int32 DY[4] =
 	{
-		0, 0, 1, -1
+		0,
+		0,
+		1,
+		-1
 	};
 
 
 	int32 VisitedFloor = 0;
 
 
-	// ========================================
+	// --------------------------------------------------------
 	// BFS
-	// ========================================
+	// --------------------------------------------------------
 
 	while (!Queue.IsEmpty())
 	{
@@ -697,112 +546,84 @@ bool FDungeonGenerator::CheckConnectivity() const
 
 		for (int32 i = 0; i < 4; ++i)
 		{
-			const int32 NX =
-				Current.X + DX[i];
-
-			const int32 NY =
-				Current.Y + DY[i];
+			const int32 NX = Current.X + DX[i];
+			const int32 NY = Current.Y + DY[i];
 
 
+			// マップ外
 			if (!IsInside(NX, NY))
 			{
 				continue;
 			}
 
 
-			const int32 Index =
-				NY * Width + NX;
+			const int32 Index = NY * Width + NX;
 
 
+			// すでに調べた
 			if (Visited[Index])
 			{
 				continue;
 			}
 
 
-			if (
-				GetTile(NX, NY) !=
-				EDungeonTile::Floor
-				)
+			// 壁
+			if (GetTile(NX, NY) != EDungeonTile::Floor)
 			{
 				continue;
 			}
 
 
+			// 訪問済みにする
 			Visited[Index] = true;
 
-
-			Queue.Enqueue(
-				FIntPoint(
-					NX,
-					NY
-				)
-			);
+			// 次に調べる
+			Queue.Enqueue(FIntPoint(NX, NY));
 		}
 	}
 
 
-	return
-		VisitedFloor ==
-		TotalFloor;
+	// 訪問できた床数と
+	// 全床数が同じなら全部つながっている
+	return VisitedFloor == TotalFloor;
 }
 
 
 // ============================================================
-// Tile設定
+// タイル設定
 // ============================================================
 
-void FDungeonGenerator::SetTile(
-	int32 X,
-	int32 Y,
-	EDungeonTile Tile
-)
+void FDungeonGenerator::SetTile(int32 X, int32 Y, EDungeonTile Tile)
 {
 	if (!IsInside(X, Y))
 	{
 		return;
 	}
 
-
-	Tiles[
-		Y * Width + X
-	] = Tile;
+	Tiles[Y * Width + X] = Tile;
 }
 
 
 // ============================================================
-// Tile取得
+// タイル取得
 // ============================================================
 
-EDungeonTile FDungeonGenerator::GetTile(
-	int32 X,
-	int32 Y
-) const
+EDungeonTile FDungeonGenerator::GetTile(int32 X, int32 Y) const
 {
 	if (!IsInside(X, Y))
 	{
 		return EDungeonTile::Wall;
 	}
 
-
-	return Tiles[
-		Y * Width + X
-	];
+	return Tiles[Y * Width + X];
 }
 
 
 // ============================================================
-// 範囲内か
+// 座標がマップ内か
 // ============================================================
 
-bool FDungeonGenerator::IsInside(
-	int32 X,
-	int32 Y
-) const
+bool FDungeonGenerator::IsInside(int32 X, int32 Y) const
 {
-	return
-		X >= 0 &&
-		Y >= 0 &&
-		X < Width &&
-		Y < Height;
+	return X >= 0 && Y >= 0 && X < Width && Y < Height;
 }
